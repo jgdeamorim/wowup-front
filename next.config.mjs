@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // For Static Export
-  output: 'export',
+  // Configuração para desenvolvimento com Draft Mode
+  // Removido 'output: export' para permitir rotas de API dinâmicas
   trailingSlash: true,
   images: {
     unoptimized: true,
