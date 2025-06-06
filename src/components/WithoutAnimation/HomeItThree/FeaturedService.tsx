@@ -1,0 +1,70 @@
+"use client";
+  
+import React from "react";
+import Link from "next/link";
+
+const FeaturedService: React.FC = () => {
+  return (
+    <>
+      <div className="features-card-section pt-100 pb-70 bg-f8fbfa">
+        <div className="container">
+          <div className="row">
+            <div className="col-lg-3 col-sm-6">
+              <div className="single-features-card text-center rounded">
+                <i className="bx bx-conversation rounded"></i>
+                <h3>
+                  <Link href="/services/details">IT Consultancy</Link>
+                </h3>
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                  do eiusmod tempor dolore magna aliqua.
+                </p>
+              </div>
+            </div>
+
+            <div className="col-lg-3 col-sm-6">
+              <div className="single-features-card text-center rounded">
+                <i className="bx bx-laptop rounded"></i>
+                <h3>
+                  <Link href="/services/details">Web Development</Link>
+                </h3>
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                  do eiusmod tempor dolore magna aliqua.
+                </p>
+              </div>
+            </div>
+
+            <div className="col-lg-3 col-sm-6">
+              <div className="single-features-card text-center rounded">
+                <i className="bx bxs-badge-check rounded"></i>
+                <h3>
+                  <Link href="/services/details">IT Solutions</Link>
+                </h3>
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                  do eiusmod tempor dolore magna aliqua.
+                </p>
+              </div>
+            </div>
+
+            <div className="col-lg-3 col-sm-6 ">
+              <div className="single-features-card text-center rounded">
+                <i className="bx bxs-megaphone rounded"></i>
+                <h3>
+                  <Link href="/services/details">Digital Marketing</Link>
+                </h3>
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                  do eiusmod tempor dolore magna aliqua.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default FeaturedService;
