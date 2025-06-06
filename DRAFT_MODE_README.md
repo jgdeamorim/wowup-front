@@ -1,140 +1,112 @@
-# Draft Mode Configuration - Next.js
+# Draft Mode com Contentful - Next.js
 
-Este projeto agora possui o Draft Mode configurado para o Vercel. O Draft Mode permite visualizar conteúdo em rascunho antes da publicação.
+Este projeto possui o Draft Mode configurado para visualizar conteúdo em rascunho do Contentful antes da publicação.
 
-## Arquivos Criados
+## Arquivos Criados/Modificados
 
-### 1. `/src/app/api/enable-draft/route.ts`
-Rota para habilitar o Draft Mode.
+### 1. `/src/app/api/enable-draft/route.ts` e `/src/app/api/disable-draft/route.ts`
+Rotas para habilitar/desabilitar o Draft Mode.
 
-**Métodos disponíveis:**
-- `GET /api/enable-draft?secret=TOKEN&redirect=URL`
-- `POST /api/enable-draft` (com body JSON)
-
-### 2. `/src/app/api/disable-draft/route.ts`
-Rota para desabilitar o Draft Mode.
-
-**Método disponível:**
-- `GET /api/disable-draft?redirect=URL`
+### 2. `/src/libs/contentful.ts`
+Cliente do Contentful configurado para suportar modo preview.
 
 ### 3. `.env.local`
-Arquivo de configuração com o token secreto.
+Arquivo de configuração com tokens do Contentful e Draft Mode.
+
+## Configuração
+
+### 1. Configurar Variáveis de Ambiente
+Copie o arquivo `.env.local.example` para `.env.local` e configure:
+
+```env
+# Draft Mode
+DRAFT_SECRET_TOKEN=seu-token-secreto
+
+# Contentful
+CONTENTFUL_SPACE_ID=seu-space-id
+CONTENTFUL_DELIVERY_TOKEN=seu-delivery-token
+CONTENTFUL_PREVIEW_TOKEN=seu-preview-token
+CONTENTFUL_ENVIRONMENT=master
+```
+
+### 2. Configurar Contentful Preview
+1. No Contentful, vá para Settings > Content Preview
+2. Adicione uma nova configuração:
+   - Nome: "Next.js Draft Mode"
+   - URL: `https://seu-site.com/api/enable-draft?secret={DRAFT_SECRET_TOKEN}&slug={entry.fields.slug}&redirect=/blog/{entry.fields.slug}`
 
 ## Como Usar
 
-### 1. Configurar o Token Secreto
-Edite o arquivo `.env.local` e substitua `your-secret-token-here` por um token seguro:
+### 1. Visualizar Conteúdo em Rascunho
+No Contentful:
+1. Edite um post
+2. Clique em "Open Preview" para ver o conteúdo em rascunho
+3. Será redirecionado para seu site com Draft Mode ativo
 
-```env
-DRAFT_SECRET_TOKEN=meu-token-super-secreto-123
+### 2. Sair do Modo Rascunho
+Clique no link "Sair do modo rascunho" na barra de preview ou acesse:
+```
+GET /api/disable-draft?redirect=/blog/seu-slug
 ```
 
-### 2. Habilitar Draft Mode
-Para habilitar o Draft Mode, acesse:
-
-```
-GET /api/enable-draft?secret=meu-token-super-secreto-123&redirect=/
-```
-
-Ou via POST:
-
-```javascript
-fetch('/api/enable-draft', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    secret: 'meu-token-super-secreto-123',
-    redirect: '/'
-  })
-})
-```
-
-### 3. Desabilitar Draft Mode
-Para desabilitar o Draft Mode:
-
-```
-GET /api/disable-draft?redirect=/
-```
-
-### 4. Verificar se Draft Mode está Ativo
-No seu código Next.js, você pode verificar se o Draft Mode está ativo:
+### 3. Implementação em Páginas
+Exemplo de uso em uma página:
 
 ```typescript
 import { draftMode } from 'next/headers';
+import { getContentfulClient, BlogPostSkeleton } from '@/libs/contentful';
 
-export default function MyPage() {
+export default async function BlogPost({ params }) {
   const { isEnabled } = draftMode();
+  const client = getContentfulClient(isEnabled);
   
-  return (
-    <div>
-      {isEnabled && (
-        <div className="draft-banner">
-          🚧 Modo Rascunho Ativo
-        </div>
-      )}
-      {/* Seu conteúdo aqui */}
-    </div>
-  );
+  const response = await client.getEntries<BlogPostSkeleton>({
+    content_type: 'blogPost',
+    'fields.slug': params.slug,
+  });
+
+  // ... resto do código
 }
 ```
 
-## Configuração no Vercel
+## Tipos do Contentful
 
-1. Acesse o painel do Vercel
-2. Vá para as configurações do seu projeto
-3. Na seção "Draft Mode", configure:
-   - **Route Handler**: `/api/enable-draft`
-   - **Secret**: O mesmo token configurado no `.env.local`
+### Definindo Tipos para Entradas
+Em `/src/libs/contentful.ts`:
+
+```typescript
+export interface BlogPostFields {
+  title: contentful.EntryFieldTypes.Text;
+  content: contentful.EntryFieldTypes.Text;
+  slug: contentful.EntryFieldTypes.Text;
+}
+
+export interface BlogPostSkeleton extends contentful.EntrySkeletonType {
+  contentTypeId: 'blogPost';
+  fields: BlogPostFields;
+}
+```
 
 ## Segurança
 
-- ⚠️ **IMPORTANTE**: Mantenha o token secreto seguro
-- Não compartilhe o token em repositórios públicos
-- Use tokens diferentes para desenvolvimento e produção
-- Considere usar variáveis de ambiente do Vercel para produção
-
-## Exemplo de Uso com CMS
-
-```typescript
-// Em uma página que busca dados de um CMS
-import { draftMode } from 'next/headers';
-
-export default async function BlogPost({ params }: { params: { slug: string } }) {
-  const { isEnabled } = draftMode();
-  
-  // Buscar dados do CMS com ou sem draft
-  const post = await fetchPost(params.slug, {
-    includeDrafts: isEnabled
-  });
-  
-  return (
-    <article>
-      {isEnabled && (
-        <div className="bg-yellow-100 p-4 mb-4">
-          ⚠️ Visualizando conteúdo em rascunho
-        </div>
-      )}
-      <h1>{post.title}</h1>
-      <div>{post.content}</div>
-    </article>
-  );
-}
-```
+- Mantenha todos os tokens seguros
+- Use diferentes tokens para desenvolvimento/produção
+- Configure variáveis de ambiente no Vercel
+- Não compartilhe tokens em repositórios públicos
 
 ## Troubleshooting
 
-### Erro: "Cannot find module 'next/headers'"
-- Certifique-se de que está usando Next.js 13+ com App Router
-- Execute `npm install` para garantir que as dependências estão atualizadas
+### Preview não funciona
+- Verifique se os tokens do Contentful estão corretos
+- Confirme se a URL de preview está configurada corretamente
+- Verifique se o content type no código corresponde ao do Contentful
 
-### Erro: "Invalid token"
-- Verifique se o token no `.env.local` está correto
-- Certifique-se de que não há espaços extras no token
-- Reinicie o servidor de desenvolvimento após alterar o `.env.local`
+### Erros de TypeScript
+- Certifique-se de usar os tipos corretos do Contentful
+- Verifique se os campos correspondem ao seu content model
+- Use `String()` para garantir que os campos são strings
 
-### Draft Mode não funciona
-- Verifique se as rotas estão acessíveis em `/api/enable-draft`
-- Confirme que o projeto está usando App Router (`src/app/`)
-- Verifique os logs do console para erros
+### Problemas de Renderização
+- Use `dangerouslySetInnerHTML` para conteúdo rico
+- Certifique-se de que os campos obrigatórios existem
+- Trate casos de campos vazios ou nulos
